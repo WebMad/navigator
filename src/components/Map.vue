@@ -33,7 +33,7 @@
                 ui: {},
                 geocoder: {},
                 resultsSearch: Object,
-                marker: Array,
+                markers: Object,
             }
         },
         props: {
@@ -65,18 +65,19 @@
 
             setPlace(place) {
 
-                //this.map.removeObject(this.marker);
-                //console.log();
-                    //this.map.removeObjects();
+                this.markers.removeAll();
 
-                this.marker = new H.map.Marker({
+                this.markers.addObject(new H.map.Marker({
+                    lat: place.Location.DisplayPosition.Latitude,
+                    lng: place.Location.DisplayPosition.Longitude,
+                }));
+
+                this.map.addObject(this.markers);
+
+                this.map.setCenter({
                     lat: place.Location.DisplayPosition.Latitude,
                     lng: place.Location.DisplayPosition.Longitude,
                 });
-
-                this.map.addObject(this.marker);
-
-                //TODO remove last object
 
                 this.$refs.placeInfo.innerHTML = 'Отмечено: ' + place.Location.Address.Label;
 
@@ -150,6 +151,8 @@
             this.ui = H.ui.UI.createDefault(this.map, defaultLayers);
 
             this.geocoder = this.platform.getGeocodingService();
+
+            this.markers = new H.map.Group();
 
             this.setCurrentPosition();
         }

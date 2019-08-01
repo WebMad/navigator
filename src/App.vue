@@ -1,5 +1,6 @@
 <template>
     <div id="app">
+
         <Map
             appId="Rf3NJEjBfi5X8qK551df"
             appCode="QDk1ZECXprsqiwQRFFUTsA"

@@ -6,6 +6,8 @@
 
 <script>
 
+    /* eslint-disable */
+
     export default {
         name: "Map",
         data() {
@@ -24,19 +26,30 @@
         },
         created() {
             this.platform = new H.service.Platform({
+                "apikey": 'brm9oXsSTBFbLRv1Y-so7W8Q1TNs8dH0EeXvDEHuRcw',
                 "app_id": this.appId,
                 "app_code": this.appCode
             });
         },
         mounted() {
+            let defaultLayers = this.platform.createDefaultLayers();
+
             this.map = new H.Map(
                 this.$refs.map,
-                this.platform.createDefaultLayers().normal.map,
+                defaultLayers.vector.normal.map,
                 {
                     zoom: 10,
-                    center: { lng: this.lng, lat: this.lat }
+                    center: { lng: this.lng, lat: this.lat },
+                    pixelRatio: window.devicePixelRatio || 1,
                 }
             );
+
+            window.addEventListener('resize', () => this.map.getViewPort().resize());
+
+            let behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(this.map));
+
+
+            let ui = H.ui.UI.createDefault(this.map, defaultLayers);
         }
     }
 </script>

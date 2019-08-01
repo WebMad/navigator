@@ -8,6 +8,8 @@
 
     /* eslint-disable */
 
+    import currentPos from '../assets/currentPos.png'
+
     export default {
         name: "Map",
         data() {
@@ -24,6 +26,38 @@
             width: String,
             height: String
         },
+        methods: {
+            setCurrentPosition() {
+                navigator.geolocation.getCurrentPosition((data) => {
+
+                    this.map.setCenter({
+                        lat: data.coords.latitude,
+                        lng: data.coords.longitude,
+                    });
+
+                    this.map.setZoom(20);
+
+                    let bearsMarker = new H.map.Circle(
+                        // The central point of the circle
+                        {
+                            lat: data.coords.latitude,
+                            lng: data.coords.longitude,
+                        },
+                        // The radius of the circle in meters
+                        1,
+                        {
+                            style: {
+                                strokeColor: 'rgb(138, 200, 255)', // Color of the perimeter
+                                lineWidth: 5,
+                                fillColor: 'rgb(86, 176, 255)'  // Color of the circle
+                            }
+                        }
+                    );
+                    this.map.addObject(bearsMarker);
+
+                });
+            }
+        },
         created() {
             this.platform = new H.service.Platform({
                 "apikey": 'brm9oXsSTBFbLRv1Y-so7W8Q1TNs8dH0EeXvDEHuRcw',
@@ -39,7 +73,7 @@
                 defaultLayers.vector.normal.map,
                 {
                     zoom: 10,
-                    center: { lng: this.lng, lat: this.lat },
+                    center: {lng: this.lng, lat: this.lat},
                     pixelRatio: window.devicePixelRatio || 1,
                 }
             );
@@ -48,8 +82,9 @@
 
             let behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(this.map));
 
-
             let ui = H.ui.UI.createDefault(this.map, defaultLayers);
+
+            this.setCurrentPosition();
         }
     }
 </script>

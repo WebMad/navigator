@@ -1,21 +1,39 @@
+
 <template>
     <div id="mapContainer">
-        <div ref="map" v-bind:style="{ width: width, height: height }"></div>
+        <div class="controls">
+            <div class="search">
+                <input v-model="searchText" ref="search" type="text">
+                <ul v-if="searchText" class="search-results">
+                    <li @click="setPlace(result)" v-for="result in resultsSearch" class="search-result">{{ result.Location.Address.Label }}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div style="width: 100%; height: 500px" class="map" ref="map"></div>
+        <div ref="placeInfo" class="placeInfo">
+
+        </div>
+
     </div>
 </template>
 
 <script>
 
-    /* eslint-disable */
-
-    import currentPos from '../assets/currentPos.png'
+    import {debounce} from "debounce"; //для ограничения по времени вызова функции запроса к api
 
     export default {
         name: "Map",
         data() {
             return {
                 map: {},
-                platform: {}
+                platform: {},
+                searchText: '',
+                behavior: {},
+                ui: {},
+                geocoder: {},
+                resultsSearch: Object,
+                marker: Array,
             }
         },
         props: {
@@ -27,6 +45,46 @@
             height: String
         },
         methods: {
+            searchPlace() {
+                if(this.searchText !== '') {
+                    this.geocoder.geocode({
+                        searchText: this.searchText,
+                    }, (data) => {
+
+                        console.log(data);
+                        this.resultsSearch = data.Response.View[0].Result;
+
+                    }, function (e) {
+                        alert(e);
+                    });
+                }
+                else {
+                    this.resultsSearch = {};
+                }
+            },
+
+            setPlace(place) {
+
+                //this.map.removeObject(this.marker);
+                //console.log();
+                    //this.map.removeObjects();
+
+                this.marker = new H.map.Marker({
+                    lat: place.Location.DisplayPosition.Latitude,
+                    lng: place.Location.DisplayPosition.Longitude,
+                });
+
+                this.map.addObject(this.marker);
+
+                //TODO remove last object
+
+                this.$refs.placeInfo.innerHTML = 'Отмечено: ' + place.Location.Address.Label;
+
+                this.searchText = '';
+                this.resultsSearch = {};
+
+            },
+
             setCurrentPosition() {
                 navigator.geolocation.getCurrentPosition((data) => {
 
@@ -56,6 +114,11 @@
                     this.map.addObject(bearsMarker);
 
                 });
+            },
+        },
+        watch: {
+            searchText: function (newData, oldData) {
+                this.debouncedGetSearchResults();
             }
         },
         created() {
@@ -64,6 +127,8 @@
                 "app_id": this.appId,
                 "app_code": this.appCode
             });
+
+            this.debouncedGetSearchResults = debounce(this.searchPlace, 500)
         },
         mounted() {
             let defaultLayers = this.platform.createDefaultLayers();
@@ -80,9 +145,11 @@
 
             window.addEventListener('resize', () => this.map.getViewPort().resize());
 
-            let behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(this.map));
+            this.behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(this.map));
 
-            let ui = H.ui.UI.createDefault(this.map, defaultLayers);
+            this.ui = H.ui.UI.createDefault(this.map, defaultLayers);
+
+            this.geocoder = this.platform.getGeocodingService();
 
             this.setCurrentPosition();
         }
@@ -91,21 +158,5 @@
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-    h3 {
-        margin: 40px 0 0;
-    }
 
-    ul {
-        list-style-type: none;
-        padding: 0;
-    }
-
-    li {
-        display: inline-block;
-        margin: 0 10px;
-    }
-
-    a {
-        color: #42b983;
-    }
 </style>
